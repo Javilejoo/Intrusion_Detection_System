@@ -1,0 +1,19 @@
+# Entorno virtual
+myenv/
+
+# Dataset (NO subir data pesada)
+dataset/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
