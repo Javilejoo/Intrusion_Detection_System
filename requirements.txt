@@ -1,0 +1,18 @@
+# Descarga del dataset desde Kaggle
+kagglehub==1.0.0
+
+# Manipulacion y analisis de datos
+numpy==2.4.3
+pandas==3.0.1
+
+# Visualizacion para el analisis exploratorio
+matplotlib==3.10.8
+seaborn==0.13.2
+
+# Ranking de variables y metricas de importancia
+scikit-learn==1.8.0
+
+# Ejecucion del notebook en Jupyter
+ipykernel==7.2.0
+notebook==7.5.5
+jupyterlab==4.5.6
