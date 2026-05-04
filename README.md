@@ -14,6 +14,8 @@ El notebook principal es [data_mining.ipynb](/c:/Users/javil/OneDrive/Documentos
 - distribucion de clases
 - revision de calidad de datos
 - descripcion de caracteristicas clave para IDS
+- entrenamiento y evaluacion de un `Decision Tree`
+- entrenamiento y evaluacion de un `LSTM`
 
 La logica reusable del EDA esta en [cicids_eda.py](/c:/Users/javil/OneDrive/Documentos/U/Data%20Science/Intrusion_Detection_System/cicids_eda.py).
 
@@ -36,6 +38,7 @@ Las dependencias estan en [requirements.txt](/c:/Users/javil/OneDrive/Documentos
 - `numpy` y `pandas`: manipulacion y analisis de datos tabulares
 - `matplotlib` y `seaborn`: visualizaciones del EDA
 - `scikit-learn`: ranking de caracteristicas e importancia de variables
+- `torch`: entrenamiento del modelo LSTM
 - `ipykernel`, `notebook` y `jupyterlab`: ejecucion del notebook en Jupyter
 
 ## Opcion 1: Descargar el dataset automaticamente
