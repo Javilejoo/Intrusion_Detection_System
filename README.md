@@ -14,9 +14,9 @@ El notebook principal es [data_mining.ipynb](/c:/Users/javil/OneDrive/Documentos
 - distribucion de clases
 - revision de calidad de datos
 - descripcion de caracteristicas clave para IDS
-- entrenamiento y evaluacion de un `Decision Tree`
-- entrenamiento y evaluacion de un `LSTM`
 - experimento binario balanceado para comparar 2 modelos de machine learning y 2 de deep learning
+- graficas por modelo de `accuracy`, `precision`, `recall`, `F1 score` y curva ROC
+- interpretacion por modelo y comparacion final entre machine learning y deep learning
 
 La logica reusable del EDA esta en [cicids_eda.py](/c:/Users/javil/OneDrive/Documentos/U/Data%20Science/Intrusion_Detection_System/cicids_eda.py).
 La comparacion balanceada `BENIGN` vs `ATTACK` esta en [cicids_balanced_binary.py](/c:/Users/javil/OneDrive/Documentos/U/Data%20Science/Intrusion_Detection_System/cicids_balanced_binary.py).
@@ -41,7 +41,7 @@ Las dependencias estan en [requirements.txt](/c:/Users/javil/OneDrive/Documentos
 - `numpy` y `pandas`: manipulacion y analisis de datos tabulares
 - `matplotlib` y `seaborn`: visualizaciones del EDA
 - `scikit-learn`: ranking de caracteristicas e importancia de variables
-- `torch`: entrenamiento del modelo LSTM
+- `torch`: entrenamiento de los modelos deep learning
 - `ipykernel`, `notebook` y `jupyterlab`: ejecucion del notebook en Jupyter
 
 ## Opcion 1: Descargar el dataset automaticamente
@@ -147,7 +147,9 @@ Dentro del notebook:
 2. ejecuta la celda `artifacts = run_eda(DATASET_DIR)`
 3. revisa la tabla `feature_report`
 4. ejecuta el experimento binario balanceado `BENIGN` vs `ATTACK`
-5. revisa la tabla final de comparacion de modelos
+5. revisa la verificacion de balance del entrenamiento
+6. revisa las graficas e interpretaciones por cada modelo
+7. revisa la comparacion final entre machine learning y deep learning
 
 ## Estrategia contra el desbalance
 El dataset CIC-IDS2017 esta desbalanceado: la clase `BENIGN` domina el volumen y varias familias de ataque tienen muy pocas filas. Para evitar una evaluacion enganosa, el proyecto usa esta regla:
@@ -158,6 +160,8 @@ El dataset CIC-IDS2017 esta desbalanceado: la clase `BENIGN` domina el volumen y
 - Los modelos de machine learning usan `class_weight`.
 - Los modelos deep learning usan `WeightedRandomSampler` para formar batches balanceados.
 - La seleccion se hace con `F1 macro`, `balanced_accuracy` y metricas especificas de la clase `ATTACK`, no solo con `accuracy`.
+
+El parquet procesado conserva la distribucion real del dataset. El balance se aplica solo al entrenamiento: en machine learning mediante peso efectivo 50/50 y en deep learning mediante muestreo esperado 50/50. Esto permite que los modelos aprendan de `BENIGN` y `ATTACK` sin alterar artificialmente validation/test.
 
 El experimento principal para detectar intrusos usa `Label_Binary`:
 
@@ -180,6 +184,8 @@ Al ejecutar el notebook deberias obtener:
 - ranking de caracteristicas clave
 - descripciones de variables importantes para el analisis IDS
 - comparacion binaria balanceada de 2 modelos ML y 2 modelos DL
+- verificacion de mezcla `BENIGN`/`ATTACK` y balance efectivo del entrenamiento
+- graficas por modelo de metricas principales y curva ROC
 - resumen interpretativo final para apoyar el informe
 
 ## Notas

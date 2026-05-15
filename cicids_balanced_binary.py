@@ -177,6 +177,8 @@ def build_split_summary(splits: dict[str, object]) -> pd.DataFrame:
 def build_balance_summary(y_train: np.ndarray) -> pd.DataFrame:
     counts = pd.Series(y_train).value_counts().reindex([0, 1], fill_value=0)
     class_weights = compute_class_weight("balanced", classes=np.array([0, 1]), y=y_train)
+    ml_effective_weight = counts.to_numpy(dtype=float) * class_weights
+    sampler_mass = counts.to_numpy(dtype=float) * (1.0 / np.maximum(counts.to_numpy(dtype=float), 1.0))
     return pd.DataFrame(
         {
             "class_id": [0, 1],
@@ -184,7 +186,15 @@ def build_balance_summary(y_train: np.ndarray) -> pd.DataFrame:
             "train_rows": [int(counts.loc[0]), int(counts.loc[1])],
             "train_pct_original": [float(counts.loc[0] / len(y_train)), float(counts.loc[1] / len(y_train))],
             "class_weight": [float(class_weights[0]), float(class_weights[1])],
-            "sampler_expected_pct": [0.5, 0.5],
+            "ml_effective_weight_total": [float(ml_effective_weight[0]), float(ml_effective_weight[1])],
+            "ml_effective_pct": [
+                float(ml_effective_weight[0] / ml_effective_weight.sum()),
+                float(ml_effective_weight[1] / ml_effective_weight.sum()),
+            ],
+            "sampler_expected_pct": [
+                float(sampler_mass[0] / sampler_mass.sum()),
+                float(sampler_mass[1] / sampler_mass.sum()),
+            ],
         }
     )
 
@@ -231,10 +241,19 @@ def _binary_metrics(
     return metrics
 
 
-def _evaluate_sklearn_model(model, X: pd.DataFrame, y: np.ndarray) -> dict[str, float]:
+def _evaluate_sklearn_result(model, X: pd.DataFrame, y: np.ndarray) -> dict[str, object]:
     y_pred = model.predict(X)
     y_score = model.predict_proba(X)[:, 1] if hasattr(model, "predict_proba") else None
-    return _binary_metrics(y, y_pred, y_score)
+    return {
+        "metrics": _binary_metrics(y, y_pred, y_score),
+        "y_true": y,
+        "y_pred": y_pred,
+        "y_score": y_score,
+    }
+
+
+def _evaluate_sklearn_model(model, X: pd.DataFrame, y: np.ndarray) -> dict[str, float]:
+    return _evaluate_sklearn_result(model, X, y)["metrics"]
 
 
 def train_ml_models(
@@ -466,6 +485,40 @@ def train_deep_models(
     )
 
 
+def build_test_artifacts(
+    splits: dict[str, object],
+    ml_models: dict[str, object],
+    dl_models: dict[str, nn.Module],
+    batch_size: int,
+) -> dict[str, dict[str, object]]:
+    artifacts: dict[str, dict[str, object]] = {}
+
+    for model_name, model in ml_models.items():
+        artifacts[model_name] = {
+            "family": "ML",
+            **_evaluate_sklearn_result(model, splits["X_test"], splits["y_test"]),
+        }
+
+    sequence_by_model = {
+        "mlp_weighted_sampler": False,
+        "lstm_weighted_sampler": True,
+    }
+    for model_name, model in dl_models.items():
+        device = next(model.parameters()).device
+        loader = _build_eval_loader(
+            splits["X_test_scaled"],
+            splits["y_test"],
+            batch_size=batch_size,
+            sequence=sequence_by_model[model_name],
+        )
+        artifacts[model_name] = {
+            "family": "DL",
+            **_evaluate_torch_model(model, loader, device),
+        }
+
+    return artifacts
+
+
 def run_balanced_binary_experiment(
     dataset_path: str | Path,
     row_limit: int | None = None,
@@ -517,4 +570,10 @@ def run_balanced_binary_experiment(
         "best_validation_model": best_validation_model,
         "best_test_model": best_test_model,
         "models": {**ml_models, **dl_models},
+        "test_artifacts": build_test_artifacts(
+            splits=splits,
+            ml_models=ml_models,
+            dl_models=dl_models,
+            batch_size=deep_batch_size,
+        ),
     }
